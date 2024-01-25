@@ -86,5 +86,5 @@ jobs:
         context: .
         push: true
         tags: |
-          bagetter/bagetter:latest
-          bagetter/bagetter:${{ github.event.inputs.releaseVersion }}
+          jefersonjr/bagetter:latest
+          jefersonjr/bagetter:${{ github.event.inputs.releaseVersion }}
