@@ -22,49 +22,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4.0.0
+    - uses: actions/checkout@v2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.100
+        dotnet-version: 3.1.x
     - name: Test
       run: dotnet test --verbosity normal
 
   release_zip:
     needs: verify
-    name: Release BaGetter.zip to GitHub
+    name: Release BaGet.zip to GitHub
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4.0.0
+    - uses: actions/checkout@v2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.100
+        dotnet-version: 3.1.x
     - name: Publish
-      run: dotnet publish src/BaGetter --configuration Release --output artifacts
+      run: dotnet publish src/BaGet --configuration Release --output artifacts
     - name: Upload
-      uses: actions/upload-artifact@v3.1.3
+      uses: actions/upload-artifact@v2
       with:
-        name: BaGetter
+        name: BaGet
         path: artifacts
-
-  release_packages:
-    needs: verify
-    name: Release packages to nuget.org
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4.0.0
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.100
-    - name: Pack
-      run: dotnet pack --configuration Release --output artifacts
-    - name: Push
-      run: dotnet nuget push "*" -s ${{ github.event.inputs.packageSource }} -k ${{secrets.NUGET_API_KEY}}
-      working-directory: artifacts
 
   release_docker_image:
     needs: verify
@@ -72,19 +55,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4.0.0
+    - uses: actions/checkout@v2
 
     - name: Log in to Docker Hub
-      uses: docker/login-action@v3.0.0
+      uses: docker/login-action@v1
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v1
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v5.0.0
+      uses: docker/build-push-action@v2
       with:
         context: .
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: |
-          jefersonjr/bagetter:latest
-          jefersonjr/bagetter:${{ github.event.inputs.releaseVersion }}
+          loicsharma/baget:latest
+          loicsharma/baget:${{ github.event.inputs.releaseVersion }}
